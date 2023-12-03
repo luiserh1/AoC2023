@@ -87,31 +87,39 @@ int main(int argc, const char* argv[])
 	// Storing every first and last digit before a new line
 	// The digits might be represented as its alphabetical name:
 	// one, two, three, four, five, six, seven, eight, nine, zero
-	// If we find a:
-	// 'e': E + i + g + h + t || s + E + v + e + n || z + E + r + o || o + n + E || t + h + r + E + e ||
-	//      f + i + v + E || s + e + v + E + n ||  n + i + n + E || t + h + r + e + E 
-	// 'f': F + o + u + r || F + i + v + e
-	// 'g': e + i + G + h + t
-	// 'h': t + H + r + e + e || e + i + g + H + t
-	// 'i': f + I + v + e || s + I + x || e + I + g + h + t || n + I + n + e
-	// 'n': N + i + n + e || o + N + e || n + i + N + e || s + e + v + e + N
-	// 'o': O + n + e || f + O + u + r || t + w + O + || z + e + r + O
-	// 'r': t + h + R + e + e || z + e + R + o || f + o + u + R 
-	// 's': S + i + x || S + e + v + e + n
-	// 't': T + w + o || T + h + r + e + e || e + i + g + h + T
-	// 'u': f + o + U + r
-	// 'v': f + i + V + e || s + e + V + e + n
-	// 'w': t + W + o
-	// 'x': s + i + X
-	// 'z': Z + e + r + o
 	// Then adding first * 10 + last to a sum
+
 	int sum = 0;
+
 	char firstDigit = '\0';
 	char lastDigit  = '\0';
+
 	const int MAX_NUM_NAME_LENGTH = 5;
 	char lastChars[MAX_NUM_NAME_LENGTH];
 	memset(lastChars, '\0', sizeof(char) * 5);
 	long lastCharsI = 0;
+
+	void digitFound(char digit)
+	{
+		if (firstDigit == '\0')
+			firstDigit = digit;
+		lastDigit = digit;
+	}
+
+	void sumDigits()
+	{
+		int increment = concatenateAndSumDigits(firstDigit, lastDigit);
+		sum += increment;
+	}
+
+	void resetLine()
+	{
+		firstDigit = '\0';
+		lastDigit = '\0';
+		memset(lastChars, '\0', sizeof(char) * 5);
+		lastCharsI = 0;
+	}
+
 	for (long i = 0; i < length - 1; i++)
 	{
 		char currentChar = buffer[i];
@@ -120,13 +128,11 @@ int main(int argc, const char* argv[])
 		// Char is digit case
 		if ((int)currentChar > 47 && (int)currentChar < 58)
 		{
-			if (firstDigit == '\0')
-				firstDigit = buffer[i];
-			lastDigit = buffer[i];
+			digitFound(buffer[i]);
 		}
 
 		// Char might be part of a digit name case
-		if (currentChar != '\n')
+		else if (currentChar != '\n')
 		{
 			switch (currentChar)
 			{
@@ -134,9 +140,7 @@ int main(int argc, const char* argv[])
 				if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'n' &&
 					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'o')
 				{
-					if (firstDigit == '\0')
-						firstDigit = '1';
-					lastDigit = '1';
+					digitFound('1');
 				}
 
 				else if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'e' &&
@@ -144,27 +148,21 @@ int main(int argc, const char* argv[])
 					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'h' &&
 					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 4) == 't')
 				{
-					if (firstDigit == '\0')
-						firstDigit = '3';
-					lastDigit = '3';
+					digitFound('3');
 				}
 
 				else if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'v' &&
 					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'i' &&
 					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'f')
 				{
-					if (firstDigit == '\0')
-						firstDigit = '5';
-					lastDigit = '5';
+					digitFound('5');
 				}
 
 				else if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'n' &&
 					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'i' &&
 					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'n')
 				{
-					if (firstDigit == '\0')
-						firstDigit = '9';
-					lastDigit = '9';
+					digitFound('9');
 				}
 
 				break;
@@ -174,9 +172,7 @@ int main(int argc, const char* argv[])
 					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'e' &&
 					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 4) == 's')
 				{
-					if (firstDigit == '\0')
-						firstDigit = '7';
-					lastDigit = '7';
+					digitFound('7');
 				}
 
 				break;
@@ -184,18 +180,14 @@ int main(int argc, const char* argv[])
 				if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'w' &&
 					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 't')
 				{
-					if (firstDigit == '\0')
-						firstDigit = '2';
-					lastDigit = '2';
+					digitFound('2');
 				}
 
 				else if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'r' &&
 					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'e' &&
 					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'z')
 				{
-					if (firstDigit == '\0')
-						firstDigit = '0';
-					lastDigit = '0';
+					digitFound('0');
 				}
 
 				break;
@@ -204,9 +196,7 @@ int main(int argc, const char* argv[])
 					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'o' &&
 					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'f')
 				{
-					if (firstDigit == '\0')
-						firstDigit = '4';
-					lastDigit = '4';
+					digitFound('4');
 				}
 
 				break;
@@ -216,9 +206,7 @@ int main(int argc, const char* argv[])
 					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'i' &&
 					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 4) == 'e')
 				{
-					if (firstDigit == '\0')
-						firstDigit = '8';
-					lastDigit = '8';
+					digitFound('8');
 				}
 
 				break;
@@ -226,9 +214,7 @@ int main(int argc, const char* argv[])
 				if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'i' &&
 					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 's')
 				{
-					if (firstDigit == '\0')
-						firstDigit = '6';
-					lastDigit = '6';
+					digitFound('6');
 				}
 
 				break;
@@ -240,16 +226,8 @@ int main(int argc, const char* argv[])
 		// End of line case
 		else
 		{
-			// sum
-			int increment = concatenateAndSumDigits(firstDigit, lastDigit);
-			printf("Sum. this row: %d\n", increment);
-			sum += increment;
-
-			// reset
-			firstDigit = '\0';
-			lastDigit  = '\0';
-			memset(lastChars, '\0', sizeof(char) * 5);
-			lastCharsI = 0;
+			sumDigits();
+			resetLine();
 
 			continue;
 		}
@@ -258,9 +236,7 @@ int main(int argc, const char* argv[])
 		if (lastCharsI > 4)
 			lastCharsI = 0;
 	}
-	int increment = concatenateAndSumDigits(firstDigit, lastDigit);
-	printf("Sum. last row: %d\n", increment);
-	sum += increment;
+	sumDigits();
 
 	// Print result
 	printf("The result is: %d\n", sum);

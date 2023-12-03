@@ -28,7 +28,6 @@ void printBuffer(char* buffer)
 	printf("%s\n", buffer);
 }
 
-
 int intValueOfChar(char digit)
 {
 	return (int)digit - 48;
@@ -41,12 +40,24 @@ int concatenateAndSumDigits(char first, char second)
 	return firstValue * 10 + lastValue;
 }
 
+// Assuming prev < length
+char getPreviousInCyclicArray(char* arr, long length, long currentIndex, long prev)
+{
+	long prevIndex;
+	if (prev > currentIndex)
+		prevIndex = length - (prev - currentIndex);
+	else
+		prevIndex = currentIndex - prev;
+
+	return arr[prevIndex];
+}
+
 int main(int argc, const char* argv[])
 {
 	//// Argument parsing and file reading
 	
 	// The program accepts only one argument:
-	// - the psth of the file to read
+	// - the path of the file to read
 	if (argc != 2)
 	{
 		printf("Usage: %s <filename>\n", argv[0]);
@@ -78,7 +89,7 @@ int main(int argc, const char* argv[])
 	// one, two, three, four, five, six, seven, eight, nine, zero
 	// If we find a:
 	// 'e': E + i + g + h + t || s + E + v + e + n || z + E + r + o || o + n + E || t + h + r + E + e ||
-	//       f + i + v + E || s + e + v + E + n ||  n + i + n + E || t + h + r + e + E 
+	//      f + i + v + E || s + e + v + E + n ||  n + i + n + E || t + h + r + e + E 
 	// 'f': F + o + u + r || F + i + v + e
 	// 'g': e + i + G + h + t
 	// 'h': t + H + r + e + e || e + i + g + H + t
@@ -97,326 +108,159 @@ int main(int argc, const char* argv[])
 	int sum = 0;
 	char firstDigit = '\0';
 	char lastDigit  = '\0';
-	char lastChars[5];
+	const int MAX_NUM_NAME_LENGTH = 5;
+	char lastChars[MAX_NUM_NAME_LENGTH];
 	memset(lastChars, '\0', sizeof(char) * 5);
-	int lastCharsI = 0;
-	for (int i = 0; i < length - 1; i++)
+	long lastCharsI = 0;
+	for (long i = 0; i < length - 1; i++)
 	{
-		if (buffer[i] == '\n')
-		{
-			int increment = concatenateAndSumDigits(firstDigit, lastDigit);
-			printf("Sum. this row: %d\n", increment);
-			sum += increment;
-			firstDigit = '\0';
-			lastDigit  = '\0';
-			lastCharsI = 0;
+		char currentChar = buffer[i];
+		lastChars[lastCharsI] = currentChar;
 
-			continue;
-		}
-
-		if ((int)buffer[i] > 47 && (int)buffer[i] < 58)
+		// Char is digit case
+		if ((int)currentChar > 47 && (int)currentChar < 58)
 		{
 			if (firstDigit == '\0')
 				firstDigit = buffer[i];
 			lastDigit = buffer[i];
-			lastCharsI = 0;
-
-			continue;
 		}
 
-		switch (buffer[i])
+		// Char might be part of a digit name case
+		if (currentChar != '\n')
 		{
-		case 'e':
-			switch (lastCharsI)
+			switch (currentChar)
 			{
-			case 0: // Eight?
-				lastChars[lastCharsI] = 'e';
-				lastCharsI++;
-				break;
-			case 1: // sEven?, zEro?
-				if (lastChars[0] == 's' || lastChars[0] == 'z')
-				{
-					lastChars[lastCharsI] = 'e';
-					lastCharsI++;
-					break;
-				}
-
-				lastCharsI = 0;
-				break;
-			case 2: // onE?
-				if (lastChars[1] == 'n')
+			case 'e':
+				if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'n' &&
+					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'o')
 				{
 					if (firstDigit == '\0')
 						firstDigit = '1';
 					lastDigit = '1';
 				}
 
-				lastCharsI = 0;
-				break;
-			case 3: // fivE sevEn? thrEe? ninE
-				if ((lastChars[1] == 'e' && lastChars[2] == 'v') || lastChars[2] == 'r')
-				{
-					lastChars[lastCharsI] = 'e';
-					lastCharsI++;
-					break;
-				}
-
-				if (lastChars[2] == 'v')
-				{
-					if (firstDigit == '\0')
-						firstDigit = '5';
-					lastDigit = '5';
-				}
-
-				if (lastChars[2] == 'n')
-				{
-					if (firstDigit == '\0')
-						firstDigit = '9';
-					lastDigit = '9';
-				}
-
-				lastCharsI = 0;
-				break;
-			case 4: // threE
-				if (lastChars[3] == 'e')
+				else if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'e' &&
+					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'r' &&
+					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'h' &&
+					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 4) == 't')
 				{
 					if (firstDigit == '\0')
 						firstDigit = '3';
 					lastDigit = '3';
 				}
 
-				lastCharsI = 0;
-				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
+				else if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'v' &&
+					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'i' &&
+					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'f')
+				{
+					if (firstDigit == '\0')
+						firstDigit = '5';
+					lastDigit = '5';
+				}
 
-			break;
-		case 'f':
-			switch (lastCharsI)
-			{
-			case 0: // Four? Five?
-				lastChars[lastCharsI] = 'f';
-				lastCharsI++;
-				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
+				else if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'n' &&
+					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'i' &&
+					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'n')
+				{
+					if (firstDigit == '\0')
+						firstDigit = '9';
+					lastDigit = '9';
+				}
 
-			break;
-		case 'g':
-			switch (lastCharsI)
-			{
-			case 2: // eiGht?
-				lastChars[lastCharsI] = 'g';
-				lastCharsI++;
 				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
+			case 'n':
+				if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'e' &&
+					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'v' &&
+					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'e' &&
+					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 4) == 's')
+				{
+					if (firstDigit == '\0')
+						firstDigit = '7';
+					lastDigit = '7';
+				}
 
-			break;
-		case 'h':
-			switch (lastCharsI)
-			{
-			case 1: // tHree?
-			case 3: // eigHt?
-				lastChars[lastCharsI] = 'h';
-				lastCharsI++;
 				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
+			case 'o':
+				if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'w' &&
+					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 't')
+				{
+					if (firstDigit == '\0')
+						firstDigit = '2';
+					lastDigit = '2';
+				}
 
-			break;
-		case 'i':
-			switch (lastCharsI)
-			{
-			case 1: // fIve?, sIx?, eIght?, nIne?
-				lastChars[lastCharsI] = 'i';
-				lastCharsI++;
-				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
+				else if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'r' &&
+					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'e' &&
+					     getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'z')
+				{
+					if (firstDigit == '\0')
+						firstDigit = '0';
+					lastDigit = '0';
+				}
 
-			break;
-		case 'n':
-			switch (lastCharsI)
-			{
-			case 0: // Nine?
-			case 1: // oNe?
-			case 2: // niNe?
-				lastChars[lastCharsI] = 'n';
-				lastCharsI++;
 				break;
-			case 5: // seveN
-				if (firstDigit == '\0')
-					firstDigit = '7';
-				lastDigit = '7';
-				lastCharsI = 0;
-				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
+			case 'r':
+				if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'u' &&
+					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'o' &&
+					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'f')
+				{
+					if (firstDigit == '\0')
+						firstDigit = '4';
+					lastDigit = '4';
+				}
 
-			break;
-		case 'o':
-			switch (lastCharsI)
-			{
-			case 0: // One?
-			case 1: // fOur?
-				lastChars[lastCharsI] = 'o';
-				lastCharsI++;
 				break;
-			case 2: // twO
-				if (firstDigit == '\0')
-					firstDigit = '2';
-				lastDigit = '2';
-				lastCharsI = 0;
-				break;
-			case 3: // zerO
-				if (firstDigit == '\0')
-					firstDigit = '0';
-				lastDigit = '0';
-				lastCharsI = 0;
-				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
+			case 't':
+				if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'h' &&
+					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 'g' &&
+					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 3) == 'i' &&
+					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 4) == 'e')
+				{
+					if (firstDigit == '\0')
+						firstDigit = '8';
+					lastDigit = '8';
+				}
 
-			break;
-		case 'r':
-			switch (lastCharsI)
-			{
-			case 2: // thRee? zeRo?
-				lastChars[lastCharsI] = 'r';
-				lastCharsI++;
 				break;
-			case 3: // fouR
-				if (firstDigit == '\0')
-					firstDigit = '4';
-				lastDigit = '4';
-				lastCharsI = 0;
-				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
+			case 'x':
+				if (getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 1) == 'i' &&
+					getPreviousInCyclicArray(lastChars, MAX_NUM_NAME_LENGTH, lastCharsI, 2) == 's')
+				{
+					if (firstDigit == '\0')
+						firstDigit = '6';
+					lastDigit = '6';
+				}
 
-			break;
-		case 's':
-			switch (lastCharsI)
-			{
-			case 0: // Six? Seven?
-				lastChars[lastCharsI] = 's';
-				lastCharsI++;
 				break;
 			default:
-				lastCharsI = 0;
 				break;
 			}
-
-			break;
-		case 't':
-			switch (lastCharsI)
-			{
-			case 0: // Two? Three?
-				lastChars[lastCharsI] = 't';
-				lastCharsI++;
-				break;
-			case 4: // eighT
-				if (firstDigit == '\0')
-					firstDigit = '8';
-				lastDigit = '8';
-				lastCharsI = 0;
-				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
-		
-			break;
-		case 'u':
-			switch (lastCharsI)
-			{
-			case 2: // foUr?
-				lastChars[lastCharsI] = 'u';
-				lastCharsI++;
-				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
-
-			break;
-		case 'v':
-			switch (lastCharsI)
-			{
-			case 2: // fiVe? seVen?
-				lastChars[lastCharsI] = 'v';
-				lastCharsI++;
-				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
-
-			break;
-		case 'w':
-			switch (lastCharsI)
-			{
-			case 1: // tWo?
-				lastChars[lastCharsI] = 'w';
-				lastCharsI++;
-				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
-
-			break;
-		case 'x':
-			switch (lastCharsI)
-			{
-			case 2: // siX
-				if (firstDigit == '\0')
-					firstDigit = '6';
-				lastDigit = '6';
-				lastCharsI = 0;
-				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
-
-			break;
-		case 'z':
-			switch (lastCharsI)
-			{
-			case 0: // Zero
-				lastChars[lastCharsI] = 'z';
-				lastCharsI++;
-				break;
-			default:
-				lastCharsI = 0;
-				break;
-			}
-
-			break;
-		default:
-			lastCharsI = 0;
-			break;
 		}
+
+		// End of line case
+		else
+		{
+			// sum
+			int increment = concatenateAndSumDigits(firstDigit, lastDigit);
+			printf("Sum. this row: %d\n", increment);
+			sum += increment;
+
+			// reset
+			firstDigit = '\0';
+			lastDigit  = '\0';
+			memset(lastChars, '\0', sizeof(char) * 5);
+			lastCharsI = 0;
+
+			continue;
+		}
+
+		lastCharsI++;
+		if (lastCharsI > 4)
+			lastCharsI = 0;
 	}
-	sum += concatenateAndSumDigits(firstDigit, lastDigit);
+	int increment = concatenateAndSumDigits(firstDigit, lastDigit);
+	printf("Sum. last row: %d\n", increment);
+	sum += increment;
 
 	// Print result
 	printf("The result is: %d\n", sum);

@@ -90,7 +90,7 @@ int main(int argc, const char* argv[])
 	if (argc != 2)
 	{
 		printf("Usage: %s <filename>\n", argv[0]);
-		return 0;
+		return 1;
 	}
 
 	// Reading the example data file
@@ -99,7 +99,7 @@ int main(int argc, const char* argv[])
 	if (fptr == NULL)
 	{
 		printf("Cannot open file %s\n", filename);
-		return 0;
+		return 2;
 	}
 	// Store content of the file
 	long length;
@@ -107,7 +107,7 @@ int main(int argc, const char* argv[])
 	if (buffer == NULL)
 	{
 		printf("Cannot read file %s\n", filename);
-		return 0;
+		return 3;
 	}
 
 	//// Work

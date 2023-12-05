@@ -76,6 +76,7 @@ void freeGame(Game* game)
 	while (currentGame != NULL)
 	{
 		Game* aux = (Game*)currentGame->next;
+		freeGameSet(currentGame->headOfSet);
 		free(currentGame);
 		currentGame = aux;
 	}

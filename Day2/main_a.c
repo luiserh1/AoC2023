@@ -2,7 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-FILE* readFile(const char* filename)
+#define MAX_RED   12
+#define MAX_GREEN 13
+#define MAX_BLUE  14
+
+static inline FILE* readFile(const char* filename)
 {
 	// Open the file in read mode
 	FILE* fptr = fopen(filename, "r");
@@ -23,7 +27,7 @@ char* allocateAndFillBuffer(FILE* fptr, long *l)
 	return buffer;
 }
 
-int intValueOfChar(char digit)
+static inline int intValueOfChar(char digit)
 {
 	return (int)digit - 48;
 }
@@ -43,12 +47,46 @@ typedef struct Game
 	uint8_t index;
 } Game;
 
+GameSet* allocateAndInitGameSet()
+{
+	GameSet* gsPtr = malloc(sizeof(GameSet));
+	if (gsPtr == NULL)
+		return NULL;
+	gsPtr->next = NULL;
+	gsPtr->r = 0;
+	gsPtr->g = 0;
+	gsPtr->b = 0;
+	return gsPtr;
+}
+
+void freeGameSet(GameSet* set)
+{
+	GameSet* currentGameSet = set;
+	while (currentGameSet != NULL)
+	{
+		GameSet* aux = (GameSet*)currentGameSet->next;
+		free(currentGameSet);
+		currentGameSet = aux;
+	}
+}
+
+void freeGame(Game* game)
+{
+	Game* currentGame = game;
+	while (currentGame != NULL)
+	{
+		Game* aux = (Game*)currentGame->next;
+		free(currentGame);
+		currentGame = aux;
+	}
+}
+
 int main(int argc, const char* argv[])
 {
 	//// Argument parsing and file reading
 	
 	// The program accepts only one argument:
-	// - the psth of the file to read
+	// - the path of the file to read
 	if (argc != 2)
 	{
 		printf("Usage: %s <filename>\n", argv[0]);
@@ -100,6 +138,7 @@ int main(int argc, const char* argv[])
 	// READING_SET_COLOR        + semi_colon    -> WAITING_AMOUNT           : create a new empty set and queue it
 	// READING_SET_COLOR        + line_break    -> READING_GAME_WORD        : conitnue
 
+	// parsing string into data structure
 	Game* gamesHead = NULL;
 	char gameDigits[3];
 	int gameDigitsI = 0;
@@ -131,13 +170,9 @@ int main(int argc, const char* argv[])
 				Game* newGame = malloc(sizeof(Game));
 				if (newGame == NULL)
 					return 1;
-				newGame->headOfSet = malloc(sizeof(GameSet));
+				newGame->headOfSet = allocateAndInitGameSet();
 				if (newGame->headOfSet == NULL)
 					return 2;
-				newGame->headOfSet->next = NULL;
-				newGame->headOfSet->r = 0;
-				newGame->headOfSet->g = 0;
-				newGame->headOfSet->b = 0;
 				newGame->index = sumIndx;
 				newGame->next = gamesHead;
 				gamesHead = newGame;
@@ -182,13 +217,10 @@ int main(int argc, const char* argv[])
 			}
 			else if (currentChar == ';')
 			{
-				GameSet *newSet = malloc(sizeof(GameSet));
+				GameSet *newSet = allocateAndInitGameSet();
 				if (newSet == NULL)
 					return 3;
 				newSet->next = gamesHead->headOfSet;
-				newSet->r = 0;
-				newSet->g = 0;
-				newSet->b = 0;
 				gamesHead->headOfSet = newSet;
 
 				state = WAITING_AMOUNT;
@@ -197,75 +229,58 @@ int main(int argc, const char* argv[])
 			{
 				state = READING_GAME_WORD;
 			}
-			// reading the colour name. true if it's the first char of the word
+			// reading the color name. true if it's the first char of the word
 			else if (currentChar != ' ' && lastReadAmount > 0)
 			{
 				if (currentChar == 'r')
-				{
 					gamesHead->headOfSet->r = lastReadAmount;
-					printf("Red value: %d\n", gamesHead->headOfSet->r);
-				}
 				else if (currentChar == 'g')
-				{
 					gamesHead->headOfSet->g = lastReadAmount;
-					printf("Green value: %d\n", gamesHead->headOfSet->g);
-				}
 				else if (currentChar == 'b')
-				{
 					gamesHead->headOfSet->b = lastReadAmount;
-					printf("Blue value: %d\n", gamesHead->headOfSet->b);
-				}
 
 				lastReadAmount = 0;
 			}
 			break;
 		}
 	}
-
-	// Restrictions to a valid game
-	// 12 red MAX, 13 green MAX, 14 blue MAX
-	const int MAX_RED   = 12;
-	const int MAX_GREEN = 13;
-	const int MAX_BLUE  = 14;
 	
+	// computing result from data structure
 	Game* currentGame = gamesHead;
 	int sumOfValidGamesIndices = 0;
 	while (currentGame != NULL)
 	{
-		printf("Analysing GAME %d\n", currentGame->index);
-
 		GameSet* currentGameSet = currentGame->headOfSet;
 		int isValid = 1;
 		while (currentGameSet != NULL)
 		{
-			printf(" - Analysing set of (%d r, %d g, %d b)\n", currentGameSet->r, currentGameSet->g, currentGameSet->b);
-
 			if (currentGameSet->r > MAX_RED   ||
 				currentGameSet->g > MAX_GREEN ||
 				currentGameSet->b > MAX_BLUE)
 			{
 				isValid = 0;
-				//break;
+				break;
 			}
 
 			currentGameSet = (GameSet*)currentGameSet->next;
 		}
 		if (isValid)
 			sumOfValidGamesIndices += currentGame->index;
-		else
-			printf(">Game is not valid!\n");
 
 		currentGame = (Game*)currentGame->next;
 	}
 
 	// Result
 
-	printf("The result is: %d", sumOfValidGamesIndices);
+	printf("The result is: %d\n", sumOfValidGamesIndices);
 
 	//// Cleanup
 
 	// Free allocated memory
 	free(buffer);
+	freeGame(gamesHead);
+
+	//// Succes
 
 	return 0;
 }

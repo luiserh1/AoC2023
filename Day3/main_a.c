@@ -74,10 +74,17 @@ static inline int isDigit(char c)
 
 static inline int isSymbol(char c)
 {
-	if ((int)c > 34 && (int)c < 46) // Remember: '.' is excluded
-		return 1;
+	// Alphanumerical chars are not symbols
+	if (isDigit(c) || (int)c > 64 && (int)c < 91 || (int)c > 96 && (int)c < 123)
+		return 0;
+	// The dot is not a symbol
+	if ((int)c == '.')
+		return 0;
+	// Spaces, separators, null etc. are not symbols
+	if ((int)c < 33)
+		return 0;
 
-	return 0;
+	return 1;
 }
 
 static inline int intValueOfChar(char digit)
@@ -235,7 +242,7 @@ int main(int argc, const char* argv[])
 	printf("Matrix after replacing the digits of valid numbers by dots\n");
 	print2DMatrix(mat, numRows, rowLength);
 
-	printf("\nThe result is: %d\n", sum);
+	printf("The result is: %d\n", sum);
 
 	//// Cleanup
 

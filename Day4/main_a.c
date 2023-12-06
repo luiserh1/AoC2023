@@ -108,40 +108,39 @@ int main(int argc, const char* argv[])
 		newCard->index = cardIndex;
 
 		// Section 2
+		CardSeriesNumber* parseNumsToken(char* numToken)
+		{
+			CardSeriesNumber* resHead = NULL;
+			while (numToken != NULL /*&& numToken != '\0'*/)
+			{
+				int num;
+				sscanf(numToken, "%d", &num);
+				CardSeriesNumber* newSeriesNum = malloc(sizeof(CardSeriesNumber));
+				if (newSeriesNum == NULL)
+					return NULL;
+				newSeriesNum->num = num;
+				newSeriesNum->next = resHead;
+				resHead = newSeriesNum;
+
+				numToken = strtok(NULL, delimBetweenNumbers);
+			}
+			return resHead;
+		}
+
 		char* section2Token = strtok(restOfLine, delimSection2);
 		restOfLine = strtok(NULL, delimSection2);
 		//printf("Section 2: %s\n", section2Token);
 		char* numToken = strtok(section2Token, delimBetweenNumbers);
-		while (numToken != NULL /*&& numToken != '\0'*/)
-		{
-			int num;
-			sscanf(numToken, "%d", &num);
-			CardSeriesNumber* newSeriesNum = malloc(sizeof(CardSeriesNumber));
-			if (newSeriesNum == NULL)
-				return 2;
-			newSeriesNum->num = num;
-			newSeriesNum->next = newCard->ownNumsHead;
-			newCard->ownNumsHead = newSeriesNum;
-
-			numToken = strtok(NULL, delimBetweenNumbers);
-		}
+		newCard->ownNumsHead = parseNumsToken(numToken);
+		if (newCard->ownNumsHead == NULL)
+			return 2;
 
 		// Section 3
 		//printf("Section 3: %s\n", restOfLine);
 		numToken = strtok(restOfLine, delimBetweenNumbers);
-		while (numToken != NULL /*&& numToken != '\0'*/)
-		{
-			int num;
-			sscanf(numToken, "%d", &num);
-			CardSeriesNumber* newSeriesNum = malloc(sizeof(CardSeriesNumber));
-			if (newSeriesNum == NULL)
-				return 2;
-			newSeriesNum->num = num;
-			newSeriesNum->next = newCard->winNumsHead;
-			newCard->winNumsHead = newSeriesNum;
-
-			numToken = strtok(NULL, delimBetweenNumbers);
-		}
+		newCard->winNumsHead = parseNumsToken(numToken);
+		if (newCard->winNumsHead == NULL)
+			return 3;
 
 		// Line fully processed
 		newCard->next = cardHead;

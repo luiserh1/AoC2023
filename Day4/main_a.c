@@ -1,30 +1,54 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#define MAX_RED   12
-#define MAX_GREEN 13
-#define MAX_BLUE  14
+typedef struct
+{
+	void* next;
+
+	uint8_t num;
+} CardSeriesNumber;
+
+typedef struct
+{
+	void* next;
+
+	CardSeriesNumber* ownNumsHead;
+	CardSeriesNumber* winNumsHead;
+
+	uint8_t index;
+} Card;
+
+void freeCardSeriesNumber(CardSeriesNumber* set)
+{
+	CardSeriesNumber* current = set;
+	while (current != NULL)
+	{
+		CardSeriesNumber* aux = (CardSeriesNumber*)current->next;
+		free(current);
+		current = aux;
+	}
+}
+
+void freeCard(Card* game)
+{
+	Card* currentGame = game;
+	while (currentGame != NULL)
+	{
+		Card* aux = (Card*)currentGame->next;
+		freeCardSeriesNumber(currentGame->ownNumsHead);
+		freeCardSeriesNumber(currentGame->winNumsHead);
+		free(currentGame);
+		currentGame = aux;
+	}
+}
 
 static inline FILE* readFile(const char* filename)
 {
 	// Open the file in read mode
 	FILE* fptr = fopen(filename, "r");
 	return fptr;
-}
-
-char* allocateAndFillBuffer(FILE* fptr, long *l)
-{
-	char* buffer = 0;
-	fseek(fptr, 0, SEEK_END);
-	long length = ftell(fptr);
-	fseek(fptr, 0, SEEK_SET);
-	buffer = malloc(length);
-	if (buffer)
-		fread(buffer, 1, length, fptr);
-	fclose(fptr);
-	*l = length;
-	return buffer;
 }
 
 static inline int intValueOfChar(char digit)
@@ -52,28 +76,134 @@ int main(int argc, const char* argv[])
 		printf("Cannot open file %s\n", filename);
 		return 2;
 	}
-	// Store content of the file
-	long length;
-	char* buffer = allocateAndFillBuffer(fptr, &length);
-	if (buffer == NULL)
-	{
-		printf("Cannot read file %s\n", filename);
-		return 3;
-	}
 
 	//// Work
 
+	// Parsing file into data structure
+	Card* cardHead = NULL;
 
+	char line[125];
+	const char delimSection1[2] = ":";
+	const char delimSection2[2] = "|";
+	const char delimBetweenNumbers[2] = " ";
+	while (fgets(line, sizeof(line), fptr) != NULL)
+	{
+		// Line format:
+		// Card <index>: <player_number>* | <winning_number>*
+		// Sections:
+		//  - First -       - Second -        - Third -
+		// Section Delimiters:
+		//             :                  |
+
+		// Section 1
+		char* section1Token = strtok(line, delimSection1);
+		char* restOfLine = strtok(NULL, delimSection1);
+		//printf("Section 1: %s\n", section1Token);
+		int cardIndex;
+		sscanf(section1Token, "Card %d", &cardIndex);
+		//printf("Card Index: %d\n", cardIndex);
+		Card* newCard = malloc(sizeof(Card));
+		if (newCard == NULL)
+			return 1;
+		newCard->index = cardIndex;
+
+		// Section 2
+		char* section2Token = strtok(restOfLine, delimSection2);
+		restOfLine = strtok(NULL, delimSection2);
+		//printf("Section 2: %s\n", section2Token);
+		char* numToken = strtok(section2Token, delimBetweenNumbers);
+		while (numToken != NULL /*&& numToken != '\0'*/)
+		{
+			int num;
+			sscanf(numToken, "%d", &num);
+			CardSeriesNumber* newSeriesNum = malloc(sizeof(CardSeriesNumber));
+			if (newSeriesNum == NULL)
+				return 2;
+			newSeriesNum->num = num;
+			newSeriesNum->next = newCard->ownNumsHead;
+			newCard->ownNumsHead = newSeriesNum;
+
+			numToken = strtok(NULL, delimBetweenNumbers);
+		}
+
+		// Section 3
+		//printf("Section 3: %s\n", restOfLine);
+		numToken = strtok(restOfLine, delimBetweenNumbers);
+		while (numToken != NULL /*&& numToken != '\0'*/)
+		{
+			int num;
+			sscanf(numToken, "%d", &num);
+			CardSeriesNumber* newSeriesNum = malloc(sizeof(CardSeriesNumber));
+			if (newSeriesNum == NULL)
+				return 2;
+			newSeriesNum->num = num;
+			newSeriesNum->next = newCard->winNumsHead;
+			newCard->winNumsHead = newSeriesNum;
+
+			numToken = strtok(NULL, delimBetweenNumbers);
+		}
+
+		// Line fully processed
+		newCard->next = cardHead;
+		cardHead = newCard;
+	}
+
+	// Computing result
+
+	int sumOfPoints = 0;
+	Card* currentCard = cardHead;
+	while (currentCard != NULL)
+	{
+		printf("Checking Card %d...\n", currentCard->index);
+		int winningPointsAmount = 0;
+
+		CardSeriesNumber* currentOwnNumber = currentCard->ownNumsHead;
+		while (currentOwnNumber != NULL)
+		{
+			CardSeriesNumber* previousWinningNumber = NULL;
+			CardSeriesNumber* currentWinningNumber = currentCard->winNumsHead;
+			while (currentWinningNumber != NULL)
+			{
+				if (currentOwnNumber->num == currentWinningNumber->num)
+				{
+					printf("\t + %d is a winning number\n", currentOwnNumber->num);
+					winningPointsAmount++;
+
+					CardSeriesNumber* auxNext = currentWinningNumber->next;
+					// Removing from winning numbers list
+					if (previousWinningNumber == NULL)
+						currentCard->winNumsHead = currentWinningNumber->next;
+					else
+						previousWinningNumber->next = currentWinningNumber->next;
+					free(currentWinningNumber);
+					currentWinningNumber = auxNext;
+				}
+				else
+				{
+					previousWinningNumber = currentWinningNumber;
+					currentWinningNumber = currentWinningNumber->next;
+				}
+			}
+
+			currentOwnNumber = currentOwnNumber->next;
+		}
+		int cardPoints = 0;
+		if (winningPointsAmount > 0) 
+			cardPoints = pow(2, winningPointsAmount - 1);
+		printf("\t > POINTS: %d\n", cardPoints);
+		sumOfPoints += cardPoints;
+
+		currentCard = currentCard->next;
+	}
 
 	// Result
 
-	//printf("The result is: %d\n", sumOfValidGamesIndices);
+	printf("The result is: %d\n", sumOfPoints);
 
 	//// Cleanup
 
 	// Free allocated memory
-	free(buffer);
-	freeGame(gamesHead);
+	freeCard(cardHead);
 
 	//// Succes
 

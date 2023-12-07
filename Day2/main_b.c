@@ -4,7 +4,7 @@
 
 typedef struct
 {
-	void* next;
+	void* previous;
 
 	uint8_t r, g, b;
 } GameSet;
@@ -12,7 +12,7 @@ typedef struct
 typedef struct Game
 {
 	GameSet* headOfSet;
-	void* next;
+	void* previous;
 
 	uint8_t index;
 } Game;
@@ -59,7 +59,7 @@ GameSet* allocateAndInitGameSet()
 	GameSet* gsPtr = malloc(sizeof(GameSet));
 	if (gsPtr == NULL)
 		return NULL;
-	gsPtr->next = NULL;
+	gsPtr->previous = NULL;
 	gsPtr->r = 0;
 	gsPtr->g = 0;
 	gsPtr->b = 0;
@@ -71,7 +71,7 @@ void freeGameSet(GameSet* set)
 	GameSet* currentGameSet = set;
 	while (currentGameSet != NULL)
 	{
-		GameSet* aux = (GameSet*)currentGameSet->next;
+		GameSet* aux = (GameSet*)currentGameSet->previous;
 		free(currentGameSet);
 		currentGameSet = aux;
 	}
@@ -82,7 +82,7 @@ void freeGame(Game* game)
 	Game* currentGame = game;
 	while (currentGame != NULL)
 	{
-		Game* aux = (Game*)currentGame->next;
+		Game* aux = (Game*)currentGame->previous;
 		freeGameSet(currentGame->headOfSet);
 		free(currentGame);
 		currentGame = aux;
@@ -182,7 +182,7 @@ int main(int argc, const char* argv[])
 				if (newGame->headOfSet == NULL)
 					return 2;
 				newGame->index = sumIndx;
-				newGame->next = gamesHead;
+				newGame->previous = gamesHead;
 				gamesHead = newGame;
 
 				gameDigitsI = 0;
@@ -228,7 +228,7 @@ int main(int argc, const char* argv[])
 				GameSet *newSet = allocateAndInitGameSet();
 				if (newSet == NULL)
 					return 3;
-				newSet->next = gamesHead->headOfSet;
+				newSet->previous = gamesHead->headOfSet;
 				gamesHead->headOfSet = newSet;
 
 				state = WAITING_AMOUNT;
@@ -273,7 +273,7 @@ int main(int argc, const char* argv[])
 			if (reqB < currentGameSet->b)
 				reqB = currentGameSet->b;
 
-			currentGameSet = (GameSet*)currentGameSet->next;
+			currentGameSet = (GameSet*)currentGameSet->previous;
 		}
 		int currentSetPower = reqR * reqG * reqB;
 		cubesetPowerSum += currentSetPower;
@@ -281,7 +281,7 @@ int main(int argc, const char* argv[])
 			"an the power of the set of cubes is: %d\n",
 			currentGame->index, reqR, reqG, reqB, currentSetPower);
 
-		currentGame = (Game*)currentGame->next;
+		currentGame = (Game*)currentGame->previous;
 	}
 
 	// Result

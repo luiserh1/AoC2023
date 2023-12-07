@@ -5,14 +5,14 @@
 
 typedef struct
 {
-	void* next;
+	void* previous;
 
 	uint8_t num;
 } CardSeriesNumber;
 
 typedef struct
 {
-	void* next;
+	void* previous;
 
 	CardSeriesNumber* ownNumsHead;
 	CardSeriesNumber* winNumsHead;
@@ -34,7 +34,7 @@ void freeCardSeriesNumber(CardSeriesNumber* set)
 	CardSeriesNumber* current = set;
 	while (current != NULL)
 	{
-		CardSeriesNumber* aux = (CardSeriesNumber*)current->next;
+		CardSeriesNumber* aux = (CardSeriesNumber*)current->previous;
 		free(current);
 		current = aux;
 	}
@@ -45,7 +45,7 @@ void freeCard(Card* game)
 	Card* currentGame = game;
 	while (currentGame != NULL)
 	{
-		Card* aux = (Card*)currentGame->next;
+		Card* aux = (Card*)currentGame->previous;
 		freeCardSeriesNumber(currentGame->ownNumsHead);
 		freeCardSeriesNumber(currentGame->winNumsHead);
 		free(currentGame);
@@ -128,7 +128,7 @@ int main(int argc, const char* argv[])
 				if (newSeriesNum == NULL)
 					return NULL;
 				newSeriesNum->num = num;
-				newSeriesNum->next = resHead;
+				newSeriesNum->previous = resHead;
 				resHead = newSeriesNum;
 
 				numToken = strtok(NULL, delimBetweenNumbers);
@@ -152,7 +152,7 @@ int main(int argc, const char* argv[])
 			return 3;
 
 		// Line fully processed
-		newCard->next = cardHead;
+		newCard->previous = cardHead;
 		cardHead = newCard;
 	}
 
@@ -177,23 +177,23 @@ int main(int argc, const char* argv[])
 					printf("\t + %d is a winning number\n", currentOwnNumber->num);
 					winningPointsAmount++;
 
-					CardSeriesNumber* auxNext = currentWinningNumber->next;
+					CardSeriesNumber* auxNext = currentWinningNumber->previous;
 					// Removing from winning numbers list
 					if (previousWinningNumber == NULL)
-						currentCard->winNumsHead = currentWinningNumber->next;
+						currentCard->winNumsHead = currentWinningNumber->previous;
 					else
-						previousWinningNumber->next = currentWinningNumber->next;
+						previousWinningNumber->previous = currentWinningNumber->previous;
 					free(currentWinningNumber);
 					currentWinningNumber = auxNext;
 				}
 				else
 				{
 					previousWinningNumber = currentWinningNumber;
-					currentWinningNumber = currentWinningNumber->next;
+					currentWinningNumber = currentWinningNumber->previous;
 				}
 			}
 
-			currentOwnNumber = currentOwnNumber->next;
+			currentOwnNumber = currentOwnNumber->previous;
 		}
 		int cardPoints = 0;
 		if (winningPointsAmount > 0) 
@@ -201,7 +201,7 @@ int main(int argc, const char* argv[])
 		printf("\t > POINTS: %d\n", cardPoints);
 		sumOfPoints += cardPoints;
 
-		currentCard = currentCard->next;
+		currentCard = currentCard->previous;
 	}
 
 	// Result

@@ -18,7 +18,7 @@ typedef struct
 	CardSeriesNumber* winNumsHead;
 
 	uint8_t index;
-	uint8_t amount;
+	uint32_t amount;
 } Card;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -30,17 +30,19 @@ static inline int intValueOfChar(char digit);
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// Card Series Number Head expected
 void freeCardSeriesNumber(CardSeriesNumber* set)
 {
 	CardSeriesNumber* current = set;
 	while (current != NULL)
 	{
-		CardSeriesNumber* aux = (CardSeriesNumber*)current->next;
+		CardSeriesNumber* aux = (CardSeriesNumber*)current->previous;
 		free(current);
 		current = aux;
 	}
 }
 
+// Card Tail expected
 void freeCard(Card* game)
 {
 	Card* currentGame = game;
@@ -90,7 +92,8 @@ int main(int argc, const char* argv[])
 	//// Work
 
 	// Parsing file into data structure
-	Card* cardHead = NULL;
+	Card* cardTail = NULL;
+	Card* cardPrev = NULL;
 
 	char line[125];
 	const char delimSection1[2] = ":";
@@ -116,6 +119,7 @@ int main(int argc, const char* argv[])
 		if (newCard == NULL)
 			return 1;
 		newCard->index = cardIndex;
+		newCard->amount = 1;
 
 		// Section 2
 		CardSeriesNumber* parseNumsToken(char* numToken)
@@ -153,14 +157,18 @@ int main(int argc, const char* argv[])
 			return 3;
 
 		// Line fully processed
-		newCard->next = cardHead;
-		cardHead = newCard;
+		if (cardTail == NULL)
+			cardTail = newCard;
+		if (cardPrev != NULL)
+			cardPrev->next = newCard;
+		newCard->next = NULL;
+		cardPrev = newCard;
 	}
 
 	// Computing result
 
-	int sumOfPoints = 0;
-	Card* currentCard = cardHead;
+	int sumOfScratchcards = 0;
+	Card* currentCard = cardTail;
 	while (currentCard != NULL)
 	{
 		printf("Checking Card %d...\n", currentCard->index);
@@ -169,7 +177,7 @@ int main(int argc, const char* argv[])
 		CardSeriesNumber* currentOwnNumber = currentCard->ownNumsHead;
 		while (currentOwnNumber != NULL)
 		{
-			CardSeriesNumber* previousWinningNumber = NULL;
+			CardSeriesNumber* nextWinningNumber = NULL;
 			CardSeriesNumber* currentWinningNumber = currentCard->winNumsHead;
 			while (currentWinningNumber != NULL)
 			{
@@ -178,41 +186,50 @@ int main(int argc, const char* argv[])
 					printf("\t + %d is a winning number\n", currentOwnNumber->num);
 					winningPointsAmount++;
 
-					CardSeriesNumber* auxNext = currentWinningNumber->previous;
+					CardSeriesNumber* auxPrev = currentWinningNumber->previous;
 					// Removing from winning numbers list
-					if (previousWinningNumber == NULL)
+					if (nextWinningNumber == NULL)
 						currentCard->winNumsHead = currentWinningNumber->previous;
 					else
-						previousWinningNumber->previous = currentWinningNumber->previous;
+						nextWinningNumber->previous = currentWinningNumber->previous;
 					free(currentWinningNumber);
-					currentWinningNumber = auxNext;
+					currentWinningNumber = auxPrev;
 				}
 				else
 				{
-					previousWinningNumber = currentWinningNumber;
+					nextWinningNumber = currentWinningNumber;
 					currentWinningNumber = currentWinningNumber->previous;
 				}
 			}
 
 			currentOwnNumber = currentOwnNumber->previous;
 		}
-		int cardPoints = 0;
-		if (winningPointsAmount > 0) 
-			cardPoints = pow(2, winningPointsAmount - 1);
-		printf("\t > POINTS: %d\n", cardPoints);
-		sumOfPoints += cardPoints;
+
+		Card* nextCard = currentCard->next;
+		for (int i = winningPointsAmount; i > 0; i--)
+		{
+			if (nextCard == NULL)
+				break;
+
+			nextCard->amount += currentCard->amount;
+
+			nextCard = nextCard->next;
+		}
+
+		printf("\t > Amount of scretchcards: %d\n", currentCard->amount);
+		sumOfScratchcards += currentCard->amount;
 
 		currentCard = currentCard->next;
 	}
 
 	// Result
 
-	printf("The result is: %d\n", sumOfPoints);
+	printf("The result is: %d\n", sumOfScratchcards);
 
 	//// Cleanup
 
 	// Free allocated memory
-	freeCard(cardHead);
+	freeCard(cardTail);
 
 	//// Succes
 

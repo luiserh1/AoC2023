@@ -168,7 +168,7 @@ int main(int argc, const char* argv[])
 		CardSeriesNumber* currentOwnNumber = currentCard->ownNumsHead;
 		while (currentOwnNumber != NULL)
 		{
-			CardSeriesNumber* previousWinningNumber = NULL;
+			CardSeriesNumber* nextWinningNumber = NULL;
 			CardSeriesNumber* currentWinningNumber = currentCard->winNumsHead;
 			while (currentWinningNumber != NULL)
 			{
@@ -179,16 +179,16 @@ int main(int argc, const char* argv[])
 
 					CardSeriesNumber* auxNext = currentWinningNumber->previous;
 					// Removing from winning numbers list
-					if (previousWinningNumber == NULL)
+					if (nextWinningNumber == NULL)
 						currentCard->winNumsHead = currentWinningNumber->previous;
 					else
-						previousWinningNumber->previous = currentWinningNumber->previous;
+						nextWinningNumber->previous = currentWinningNumber->previous;
 					free(currentWinningNumber);
 					currentWinningNumber = auxNext;
 				}
 				else
 				{
-					previousWinningNumber = currentWinningNumber;
+					nextWinningNumber = currentWinningNumber;
 					currentWinningNumber = currentWinningNumber->previous;
 				}
 			}

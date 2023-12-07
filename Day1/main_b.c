@@ -2,7 +2,19 @@
 #include <stdio.h>
 #include <string.h>
 
-FILE* readFile(const char* filename)
+static inline FILE* readFile(const char*);
+
+char* allocateAndFillBuffer(FILE*, long*);
+static inline void printBuffer(char*);
+
+static inline int intValueOfChar(char);
+static inline int concatenateAndSumDigits(char, char);
+
+char getPreviousInCyclicArray(char*, long, long, long);
+
+///////////////////////////////////////////////////////////////////////////////
+
+static inline FILE* readFile(const char* filename)
 {
 	// Open the file in read mode
 	FILE* fptr = fopen(filename, "r");
@@ -23,17 +35,17 @@ char* allocateAndFillBuffer(FILE* fptr, long *l)
 	return buffer;
 }
 
-void printBuffer(char* buffer)
+static inline void printBuffer(char* buffer)
 {
 	printf("%s\n", buffer);
 }
 
-int intValueOfChar(char digit)
+static inline int intValueOfChar(char digit)
 {
 	return (int)digit - 48;
 }
 
-int concatenateAndSumDigits(char first, char second)
+static inline int concatenateAndSumDigits(char first, char second)
 {
 	int firstValue = intValueOfChar(first);
 	int lastValue  = intValueOfChar(second);

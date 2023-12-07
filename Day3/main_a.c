@@ -2,6 +2,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static inline FILE* readFile(const char*);
+char* allocateAndFillBuffer(FILE*, long*);
+static inline int intValueOfChar(char);
+char* allocate2DMatrixFromBuffer(char*, long, long*, long*);
+static inline long getIndexFor2DMatrix(long, long, long);
+static inline int isDigit(char);
+static inline int isSymbol(char c);
+static inline int intValueOfChar(char);
+void print2DMatrix(char*, long, long);
+void printIsSymbolIn2DMatrix(char*, long, long);
+
+///////////////////////////////////////////////////////////////////////////////
+
 FILE* readFile(const char* filename)
 {
 	// Open the file in read mode

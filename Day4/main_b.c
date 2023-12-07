@@ -12,7 +12,7 @@ typedef struct
 
 typedef struct
 {
-	void* previous;
+	void* next;
 
 	CardSeriesNumber* ownNumsHead;
 	CardSeriesNumber* winNumsHead;
@@ -20,6 +20,15 @@ typedef struct
 	uint8_t index;
 	uint8_t amount;
 } Card;
+
+///////////////////////////////////////////////////////////////////////////////
+
+void freeCardSeriesNumber(CardSeriesNumber* set);
+void freeCard(Card* game);
+static inline FILE* readFile(const char* filename);
+static inline int intValueOfChar(char digit);
+
+///////////////////////////////////////////////////////////////////////////////
 
 void freeCardSeriesNumber(CardSeriesNumber* set)
 {
@@ -32,12 +41,12 @@ void freeCardSeriesNumber(CardSeriesNumber* set)
 	}
 }
 
-void freeCardFromTail(Card* game)
+void freeCard(Card* game)
 {
 	Card* currentGame = game;
 	while (currentGame != NULL)
 	{
-		Card* aux = (Card*)currentGame->previous;
+		Card* aux = (Card*)currentGame->next;
 		freeCardSeriesNumber(currentGame->ownNumsHead);
 		freeCardSeriesNumber(currentGame->winNumsHead);
 		free(currentGame);
@@ -81,9 +90,7 @@ int main(int argc, const char* argv[])
 	//// Work
 
 	// Parsing file into data structure
-	Card* cardTail = NULL;
-
-	Card* nextCard = NULL;
+	Card* cardHead = NULL;
 
 	char line[125];
 	const char delimSection1[2] = ":";
@@ -109,7 +116,6 @@ int main(int argc, const char* argv[])
 		if (newCard == NULL)
 			return 1;
 		newCard->index = cardIndex;
-		newCard->amount = 1;
 
 		// Section 2
 		CardSeriesNumber* parseNumsToken(char* numToken)
@@ -147,24 +153,14 @@ int main(int argc, const char* argv[])
 			return 3;
 
 		// Line fully processed
-		if (nextCard == NULL)
-		{
-			nextCard->previous = newCard;
-		}
-		else
-		{
-			cardTail = newCard;
-		}
-
-		nextCard = newCard;
+		newCard->next = cardHead;
+		cardHead = newCard;
 	}
-	if (cardTail->previous == NULL)
-		printf("Fuck!\n");
 
 	// Computing result
 
-	int sumOfCards = 0;
-	Card* currentCard = cardTail;
+	int sumOfPoints = 0;
+	Card* currentCard = cardHead;
 	while (currentCard != NULL)
 	{
 		printf("Checking Card %d...\n", currentCard->index);
@@ -200,32 +196,23 @@ int main(int argc, const char* argv[])
 
 			currentOwnNumber = currentOwnNumber->next;
 		}
+		int cardPoints = 0;
+		if (winningPointsAmount > 0) 
+			cardPoints = pow(2, winningPointsAmount - 1);
+		printf("\t > POINTS: %d\n", cardPoints);
+		sumOfPoints += cardPoints;
 
-		Card* previousCard = currentCard->previous;
-		for (int i = winningPointsAmount; winningPointsAmount > 0; winningPointsAmount--)
-		{
-			if (previousCard == NULL)
-				break;
-
-			previousCard->amount += currentCard->amount;
-
-			previousCard = previousCard->previous;
-		}
-
-		sumOfCards += currentCard->amount;
-		printf("\t > Amount of scratchcards: %d\n", currentCard->amount);
-
-		currentCard = currentCard->previous;
+		currentCard = currentCard->next;
 	}
 
 	// Result
 
-	printf("The result is: %d\n", sumOfCards);
+	printf("The result is: %d\n", sumOfPoints);
 
 	//// Cleanup
 
 	// Free allocated memory
-	freeCardFromTail(cardTail);
+	freeCard(cardHead);
 
 	//// Succes
 

@@ -2,9 +2,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_RED   12
-#define MAX_GREEN 13
-#define MAX_BLUE  14
+typedef struct
+{
+	void* next;
+
+	uint8_t r, g, b;
+} GameSet;
+
+typedef struct Game
+{
+	GameSet* headOfSet;
+	void* next;
+
+	uint8_t index;
+} Game;
+
+///////////////////////////////////////////////////////////////////////////////
+
+static inline FILE* readFile(const char*);
+char* allocateAndFillBuffer(FILE*, long*);
+static inline int intValueOfChar(char);
+GameSet* allocateAndInitGameSet();
+void freeGameSet(GameSet*);
+void freeGame(Game*);
+
+///////////////////////////////////////////////////////////////////////////////
 
 static inline FILE* readFile(const char* filename)
 {
@@ -31,21 +53,6 @@ static inline int intValueOfChar(char digit)
 {
 	return (int)digit - 48;
 }
-
-typedef struct
-{
-	void* next;
-
-	uint8_t r, g, b;
-} GameSet;
-
-typedef struct Game
-{
-	GameSet* headOfSet;
-	void* next;
-
-	uint8_t index;
-} Game;
 
 GameSet* allocateAndInitGameSet()
 {

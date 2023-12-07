@@ -20,6 +20,15 @@ typedef struct
 	uint8_t index;
 } Card;
 
+///////////////////////////////////////////////////////////////////////////////
+
+void freeCardSeriesNumber(CardSeriesNumber* set);
+void freeCard(Card* game);
+static inline FILE* readFile(const char* filename);
+static inline int intValueOfChar(char digit);
+
+///////////////////////////////////////////////////////////////////////////////
+
 void freeCardSeriesNumber(CardSeriesNumber* set)
 {
 	CardSeriesNumber* current = set;
